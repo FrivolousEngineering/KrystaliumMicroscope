@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import signal
 
 import aiofiles
 import yaml
@@ -34,26 +35,37 @@ async def main():
 
     try:
         while True:
-            id = await rfid.detect()
+            rfid_id = await rfid.detect()
 
-            if not id:
+            if rfid_id is None:
+                continue
+
+            if rfid_id == "":
                 await unreal.play_stop()
                 continue
 
-            sample = await api.get(id)
+            sample = await api.get(rfid_id)
+            if not sample:
+                continue
 
-            await unreal.update(sample)
+            await unreal.update_from_sample(sample)
             await unreal.reinitialize()
             await unreal.play_startup()
-    except Exception as e:
-        logging.exception()
-
-    await rfid.stop()
-    await unreal.stop()
-    await api.stop()
+    finally:
+        await rfid.stop()
+        await unreal.stop()
+        await api.stop()
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level = logging.WARNING)
+    logging.basicConfig(level = logging.DEBUG)
 
-    asyncio.run(main())
+    loop = asyncio.get_event_loop()
+    main_task = asyncio.ensure_future(main())
+    for s in signal.SIGINT, signal.SIGTERM:
+        loop.add_signal_handler(s, main_task.cancel)
+
+    try:
+        loop.run_until_complete(main_task)
+    finally:
+        loop.close()
