@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "krystaliummicroscope"
+version = "0.1.0"
+description = "Medical microscope for Krystalium"
+authors = ["Arjen Hiemstra <ahiemstra@heimr.nl>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+aiohttp = "^3.9.3"
+pydantic = "^2.6.0"
+pyyaml = "^6.0.1"
+aiofiles = "^23.2.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
