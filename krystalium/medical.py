@@ -6,6 +6,7 @@ from pydantic import Field
 from pydantic.dataclasses import dataclass
 
 from .types import Color, ParameterModifier
+from .effect_table import effect_table
 
 log = logging.getLogger(__name__)
 
@@ -222,14 +223,3 @@ class UnrealCommunication:
         return None, None
 
 
-
-effect_table = {
-    "Contracting": {
-        "Gas": SystemParameters(
-            rbc_scale = 0.5,
-            rbc_movement_multiplier = 0.5,
-            wbc_scale = 0.5,
-            wbc_movement_multiplier = 0.5,
-        )
-    }
-}
