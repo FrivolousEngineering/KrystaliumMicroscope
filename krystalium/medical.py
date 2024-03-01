@@ -71,7 +71,7 @@ class SystemParameters:
 
 class UnrealCommunication:
     SystemObjectPath: str = "/Game/Medical/L_Medical.L_Medical:PersistentLevel.NiagaraActor_1.NiagaraComponent0"
-    LevelObjectPath: str = "/Game/Medical/L_Medical.L_Medical:PersistentLevel.L_Medical_C_0"
+    LevelObjectPath: str = "/Game/Medical/L_Medical.L_Medical:PersistentLevel.L_Medical_C_{}"
 
     def __init__(self, config: Config) -> None:
         self.__config = config
@@ -94,6 +94,18 @@ class UnrealCommunication:
 
     async def start(self):
         self.__session = aiohttp.ClientSession(f"http://{self.__config.host}:{self.__config.port}")
+
+        # To call methods on the Level blueprint we need to get the instance of the blueprint.
+        # Unfortunately the exact object path changes per build, so try and iterate until we
+        # find it.
+        for i in range(10):
+            path = self.LevelObjectPath.format(i)
+            async with self.__session.put("/remote/object/describe", json = {"objectPath": path}) as response:
+                if response.ok:
+                    self.__actual_level_object_path = path
+                    break
+        else:
+            log.warning("Could not find level object path")
 
     async def stop(self):
         await self.play_stop()
@@ -150,14 +162,17 @@ class UnrealCommunication:
                     if not response.ok:
                         log.warning(f"Batch execution failed ({response.status}): {response.reason} {await response.text()}")
 
+    async def reset(self):
+        await self.__rpc_call(object_path = self.__actual_level_object_path, function_name = "Reset")
+
     async def reinitialize(self):
         await self.__rpc_call(object_path = self.SystemObjectPath, function_name = "ReinitializeSystem")
 
     async def play_startup(self):
-        await self.__rpc_call(object_path = self.LevelObjectPath, function_name = "PlayStartup")
+        await self.__rpc_call(object_path = self.__actual_level_object_path, function_name = "PlayStartup")
 
     async def play_stop(self):
-        await self.__rpc_call(object_path = self.LevelObjectPath, function_name = "PlayStop")
+        await self.__rpc_call(object_path = self.__actual_level_object_path, function_name = "PlayStop")
 
     async def __rpc_call(self, *, object_path: str, function_name: str, **kwargs) -> bool:
         data = {
