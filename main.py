@@ -13,7 +13,8 @@ import krystalium
 class Config:
     api: krystalium.api.Config = pydantic.Field(default_factory = krystalium.api.Config)
     unreal: krystalium.medical.Config = pydantic.Field(default_factory = krystalium.medical.Config)
-    rfid: krystalium.rfid.Config = pydantic.Field(default_factory = krystalium.rfid.Config)
+    rfid_first: krystalium.rfid.Config = pydantic.Field(default_factory = krystalium.rfid.Config)
+    rfid_second: krystalium.rfid.Config = pydantic.Field(default_factory = krystalium.rfid.Config)
 
 
 async def main():
@@ -27,32 +28,36 @@ async def main():
 
     api = krystalium.api.Api(config.api)
     unreal = krystalium.medical.UnrealCommunication(config.unreal)
-    rfid = krystalium.rfid.RfidController(config.rfid)
+    rfid_first = krystalium.rfid.RfidController(config.rfid_first)
+    rfid_second = krystalium.rfid.RfidController(config.rfid_second)
 
     await api.start()
     await unreal.start()
-    await rfid.start()
+    await rfid_first.start()
+    await rfid_second.start()
 
     try:
         while True:
-            rfid_id = await rfid.detect()
+            await asyncio.sleep(0.01)
 
-            if rfid_id is None:
+            first_id = rfid_first.rfid_id
+            second_id = rfid_second.rfid_id
+
+            if first_id == "" or second_id == "":
+                await unreal.set_active(False)
                 continue
 
-            if rfid_id == "":
-                await unreal.play_stop()
-                continue
+            if not unreal.active:
+                blood_sample, krystal_sample = await api.get_samples(first_id, second_id)
+                if not blood_sample or not krystal_sample:
+                    continue
 
-            sample = await api.get(rfid_id)
-            if not sample:
-                continue
-
-            await unreal.update_from_sample(sample)
-            await unreal.reinitialize()
-            await unreal.play_startup()
+                await unreal.update_from_samples(blood_sample, krystal_sample)
+                await unreal.reinitialize()
+                await unreal.set_active(True)
     finally:
-        await rfid.stop()
+        await rfid_first.stop()
+        await rfid_second.stop()
         await unreal.stop()
         await api.stop()
 
