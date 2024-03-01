@@ -1,11 +1,11 @@
 import logging
 import dataclasses
-import typing
 
 import aiohttp
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
+from .types import Color, ParameterModifier
 
 log = logging.getLogger(__name__)
 
@@ -14,23 +14,6 @@ log = logging.getLogger(__name__)
 class Config:
     host: str = "localhost"
     port: int = 30010
-
-
-@dataclass(kw_only = True, frozen = True)
-class Color:
-    r: float
-    g: float
-    b: float
-    a: float
-
-    @classmethod
-    def mix(first, second, amount):
-        return Color(
-            first.r * (1.0 - amount) + second.r * amount,
-            first.g * (1.0 - amount) + second.g * amount,
-            first.b * (1.0 - amount) + second.b * amount,
-            first.a * (1.0 - amount) + second.a * amount,
-        )
 
 
 @dataclass(kw_only = True)
