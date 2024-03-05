@@ -55,11 +55,27 @@ for r in range(len(rows)):
                 operation = "set"
                 value = value[1:]
 
-            modifiers.append(f"ParameterModifier(\"{key}\", \"{value}\", \"{operation}\")")
+            modifiers.append(f"ParameterModifier(\"{key}\", {value}, \"{operation}\")")
 
         row_data[targets[i]] = modifiers
     table[actions[r]] = row_data
 
 
+output = json.dumps(table, indent = 4)
+
 with open("effect_table.py", "w") as f:
-    json.dump(table, f, indent = 4)
+    f.write("from .types import Color, ParameterModifier\n")
+    f.write("\n")
+    f.write("effect_table = ")
+
+    for line in output.splitlines(True):
+        if line.strip().startswith("\"ParameterModifier"):
+            line = line.replace("\"Param", "Param")
+            line = line.replace(r'\"', r'"')
+            line = line.replace("\"Color", "Color")
+            line = line.replace(r')"', ')')
+            f.write(line)
+        else:
+            f.write(line)
+
+    f.write("\n")
