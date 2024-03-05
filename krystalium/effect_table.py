@@ -3,7 +3,7 @@ from .types import Color, ParameterModifier
 effect_table = {
     "Increasing": {
         "Energy": [
-            ParameterModifier("base_movement_speed", 2.0, "mul"),
+            ParameterModifier("base_movement_speed", 2.0, "mul")
         ],
         "Flesh": [
             ParameterModifier("rbc_spawn_chance", 2.0, "mul"),
@@ -11,7 +11,7 @@ effect_table = {
         ],
         "Sound": [],
         "Gas": [
-            ParameterModifier("rbc_tint", Color(r = 0.25, g = -0.5, b = -0.5), "add")
+            ParameterModifier("rbc_tint", Color(0.25, -0.5, -0.5), "add")
         ],
         "Krystal": [
             ParameterModifier("krystal_spawn_chance", 2.0, "mul")
@@ -26,6 +26,7 @@ effect_table = {
             ParameterModifier("plant_spawn_rate", 2.0, "mul")
         ],
         "Solid": [
+            ParameterModifier("platelet_spawn_chance", 2.0, "mul")
         ]
     },
     "Decreasing": {
@@ -38,10 +39,10 @@ effect_table = {
         ],
         "Sound": [],
         "Gas": [
-            ParameterModifier("rbc_tint", Color(r = 0.05, g = 0.15, b = 0.15), "add")
+            ParameterModifier("rbc_tint", Color(0.05, 0.15, 0.15), "add")
         ],
         "Krystal": [
-            ParameterModifier("krystal_spawn_chance", 0.5, "mul")
+            ParameterModifier("Krystal_Spawn_chance", 0.5, "mul")
         ],
         "Light": [],
         "Liquid": [
@@ -52,12 +53,15 @@ effect_table = {
         "Plant": [
             ParameterModifier("plant_spawn_rate", 0.5, "mul")
         ],
-        "Solid": []
+        "Solid": [
+            ParameterModifier("platelet_spawn_chance", 0.5, "mul"),
+            ParameterModifier("rbc_oval_chance", 1.0, "add")
+        ]
     },
     "Creating": {
         "Energy": [
             ParameterModifier("coagulated_strand_spawn_chance", 1.0, "set"),
-            ParameterModifier("coagulated_strand_tint", Color(r = 0.9, g = 1.5, b = 2.0), "set"),
+            ParameterModifier("coagulated_strand_tint", Color(.9, 1.5, 2.0), "set"),
             ParameterModifier("coagulated_strand_lifetime", 1.0, "set")
         ],
         "Flesh": [
@@ -65,14 +69,14 @@ effect_table = {
             ParameterModifier("wbc_spawn_chance", 0.5, "add")
         ],
         "Sound": [
-            ParameterModifier("base_movement_jiggle", 1.0, "add")
+            ParameterModifier("base_movement_jitter", 1.0, "add")
         ],
         "Gas": [],
         "Krystal": [
             ParameterModifier("krystal_spawn_chance", 1.0, "add")
         ],
         "Light": [
-            ParameterModifier("base_color", Color(r = 7, g = 10, b = 7), "set")
+            ParameterModifier("base_color", Color(7.0, 10.0, 7.0), "set")
         ],
         "Liquid": [
             ParameterModifier("base_movement_speed", 2.0, "mul"),
@@ -80,9 +84,12 @@ effect_table = {
         ],
         "Mind": [],
         "Plant": [
-            ParameterModifier("plant_spawn_rate", 1.0, "add")
+            ParameterModifier("plant_spawn_rate", 0.5, "add")
         ],
-        "Solid": []
+        "Solid": [
+            ParameterModifier("coagulated_strand_spawn_chance", 0.01, "add"),
+            ParameterModifier("platelet_spawn_chance", 0.5, "add")
+        ]
     },
     "Destroying": {
         "Energy": [
@@ -100,12 +107,16 @@ effect_table = {
             ParameterModifier("krystal_spawn_chance", 0, "set")
         ],
         "Light": [],
-        "Liquid": [],
+        "Liquid": [
+            ParameterModifier("base_spawn_rate", 0, "set")
+        ],
         "Mind": [],
         "Plant": [
             ParameterModifier("plant_spawn_rate", 0, "set")
         ],
-        "Solid": []
+        "Solid": [
+            ParameterModifier("base_spawn_rate", 0, "set")
+        ]
     },
     "Expanding": {
         "Energy": [],
@@ -121,7 +132,9 @@ effect_table = {
             ParameterModifier("krystal_scale", 0.5, "add")
         ],
         "Light": [],
-        "Liquid": [],
+        "Liquid": [
+            ParameterModifier("base_spawn_rate", 2.0, "mul")
+        ],
         "Mind": [],
         "Plant": [
             ParameterModifier("plant_scale", 0.5, "add")
@@ -135,12 +148,16 @@ effect_table = {
             ParameterModifier("base_spawn_rate", 2.0, "mul")
         ],
         "Sound": [],
-        "Gas": [],
+        "Gas": [
+            ParameterModifier("base_movement_speed", 3.0, "add")
+        ],
         "Krystal": [
             ParameterModifier("krystal_Scale", -0.5, "add")
         ],
         "Light": [],
-        "Liquid": [],
+        "Liquid": [
+            ParameterModifier("base_spawn_rate", 0.5, "mul")
+        ],
         "Mind": [],
         "Plant": [
             ParameterModifier("plant_scale", -0.5, "add")
@@ -181,7 +198,9 @@ effect_table = {
             ParameterModifier("base_movement_speed", 2.0, "mul")
         ],
         "Sound": [],
-        "Gas": [],
+        "Gas": [
+            ParameterModifier("rbc_movement_multiplier", -0.5, "add")
+        ],
         "Krystal": [
             ParameterModifier("krystal_movement_multiplier", 0.5, "add")
         ],
@@ -191,7 +210,9 @@ effect_table = {
         "Plant": [
             ParameterModifier("plant_movement_multiplier", 0.5, "add")
         ],
-        "Solid": []
+        "Solid": [
+            ParameterModifier("platelet_movement_multiplier", 0.5, "add")
+        ]
     },
     "Encumbering": {
         "Energy": [],
@@ -199,7 +220,9 @@ effect_table = {
             ParameterModifier("base_movement_speed", 0.5, "mul")
         ],
         "Sound": [],
-        "Gas": [],
+        "Gas": [
+            ParameterModifier("rbc_movement_multiplier", 0.5, "add")
+        ],
         "Krystal": [
             ParameterModifier("krystal_movement_multiplier", -0.5, "add")
         ],
@@ -209,7 +232,9 @@ effect_table = {
         "Plant": [
             ParameterModifier("plant_movement_multiplier", -0.5, "add")
         ],
-        "Solid": []
+        "Solid": [
+            ParameterModifier("platelet_movement_multiplier", -0.5, "add")
+        ]
     },
     "Cooling": {
         "Energy": [],
@@ -217,17 +242,23 @@ effect_table = {
             ParameterModifier("base_movement_jitter", -0.5, "add")
         ],
         "Sound": [],
-        "Gas": [],
+        "Gas": [
+            ParameterModifier("rbc_movement_jitter", -0.5, "add")
+        ],
         "Krystal": [
             ParameterModifier("krystal_movement_jitter", -0.5, "add")
         ],
         "Light": [],
-        "Liquid": [],
+        "Liquid": [
+            ParameterModifier("base_movement_jitter", -0.5, "add")
+        ],
         "Mind": [],
         "Plant": [
             ParameterModifier("plant_movement_jitter", -0.5, "add")
         ],
-        "Solid": []
+        "Solid": [
+            ParameterModifier("platelet_movement_jitter", -0.5, "add")
+        ]
     },
     "Heating": {
         "Energy": [],
@@ -235,17 +266,23 @@ effect_table = {
             ParameterModifier("base_movement_jitter", 0.5, "add")
         ],
         "Sound": [],
-        "Gas": [],
+        "Gas": [
+            ParameterModifier("rbc_movement_jitterr", 0.5, "add")
+        ],
         "Krystal": [
             ParameterModifier("krystal_movement_jitter", 0.5, "add")
         ],
         "Light": [],
-        "Liquid": [],
+        "Liquid": [
+            ParameterModifier("base_movement_jitter", 0.5, "add")
+        ],
         "Mind": [],
         "Plant": [
             ParameterModifier("plant_movement_jitter", 0.5, "add")
         ],
-        "Solid": []
+        "Solid": [
+            ParameterModifier("platelet_movement_jitter", 0.5, "add")
+        ]
     },
     "Conducting": {
         "Energy": [
@@ -257,7 +294,7 @@ effect_table = {
         "Gas": [],
         "Krystal": [],
         "Light": [
-            ParameterModifier("rbc_tint", "R+0.25G+0.25B+0.25", "add")
+            ParameterModifier("rbc_tint", Color(0.25, 0.25, 0.25), "add")
         ],
         "Liquid": [
             ParameterModifier("rbc_burr_chance", 1.0, "add"),
@@ -265,7 +302,9 @@ effect_table = {
         ],
         "Mind": [],
         "Plant": [],
-        "Solid": []
+        "Solid": [
+            ParameterModifier("platelet_movement_multiplier", 1.0, "add")
+        ]
     },
     "Insulating": {
         "Energy": [],
@@ -274,12 +313,15 @@ effect_table = {
         "Gas": [],
         "Krystal": [],
         "Light": [
-            ParameterModifier("rbc_tint", Color(r = -0.25, g = -0.25, b = -0.25), "add")
+            ParameterModifier("rbc_tint", Color(-0.25, -0.25, -0.25), "add")
         ],
         "Liquid": [],
         "Mind": [],
         "Plant": [],
-        "Solid": []
+        "Solid": [
+            ParameterModifier("platelet_movement_multiplier", -1.0, "add"),
+            ParameterModifier("rbc_oval_chance", 1.0, "add")
+        ]
     },
     "Absorbing": {
         "Energy": [
@@ -289,36 +331,55 @@ effect_table = {
         "Flesh": [],
         "Sound": [],
         "Gas": [
-            ParameterModifier("rbc_scale", 0.25, "add")
+            ParameterModifier("rbc_scale", 0.5, "add")
         ],
         "Krystal": [
-            ParameterModifier("rbc_tint", Color(r = 0.0, g = 0.0, b = 1.0), "add"),
-            ParameterModifier("wbc_tint", Color(r = 0.0, g = 0.0, b = 1.0), "add")
+            ParameterModifier("rbc_tint", Color(0.0, 1.0, 0.0), "add"),
+            ParameterModifier("wbc_tint", Color(0.0, 1.0, 0.0), "add")
         ],
         "Light": [],
-        "Liquid": [],
+        "Liquid": [
+            ParameterModifier("rbc_scale", 1.0, "add"),
+            ParameterModifier("dead_spawn_chance", 0.5, "add")
+        ],
         "Mind": [],
-        "Plant": [],
-        "Solid": []
+        "Plant": [
+            ParameterModifier("base_color", Color(0.0, 0.2, 0.0), "add")
+        ],
+        "Solid": [
+            ParameterModifier("platelet_spawn_chance", 0.5, "add")
+        ]
     },
     "Releasing": {
-        "Energy": [],
+        "Energy": [
+            ParameterModifier("coagulated_strand_spawn_chance", 0.5, "set"),
+            ParameterModifier("coagulated_strand_tint", Color(.9, 1.5, 2.0), "set"),
+            ParameterModifier("coagulated_strand_lifetime", 1.0, "set"),
+            ParameterModifier("coagulated_strand_scale", 0.1, "set")
+        ],
         "Flesh": [],
         "Sound": [],
         "Gas": [
-            ParameterModifier("rbc_scale", -0.25, "add")
+            ParameterModifier("rbc_scale", -0.5, "add")
         ],
         "Krystal": [],
         "Light": [],
-        "Liquid": [],
+        "Liquid": [
+            ParameterModifier("rbc_burr_chance", 1.0, "add")
+        ],
         "Mind": [],
-        "Plant": [],
-        "Solid": []
+        "Plant": [
+            ParameterModifier("plant_tint", Color(0.2, 0.0, 0.2), "add")
+        ],
+        "Solid": [
+            ParameterModifier("platelet_spawn_chance", -0.5, "add"),
+            ParameterModifier("rbc_oval_chance", 1.0, "add")
+        ]
     },
     "Solidifying": {
         "Energy": [],
         "Flesh": [
-            ParameterModifier("coagulated_strand_spawn_chance", 0.01, "add")
+            ParameterModifier("coagulated_strand_spawn_chance", 0.02, "add")
         ],
         "Sound": [],
         "Gas": [
@@ -330,7 +391,10 @@ effect_table = {
             ParameterModifier("coagulated_strand_spawn_chance", 0.01, "add")
         ],
         "Mind": [],
-        "Plant": [],
+        "Plant": [
+            ParameterModifier("coagulated_strand_spawn_chance", 0.01, "add"),
+            ParameterModifier("coagulated_strand_tint", Color(-0.2, 0.0, -0.2), "add")
+        ],
         "Solid": []
     }
 }
