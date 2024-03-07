@@ -60,9 +60,11 @@ effect_table = {
     },
     "Creating": {
         "Energy": [
-            ParameterModifier("coagulated_strand_spawn_chance", 1.0, "set"),
-            ParameterModifier("coagulated_strand_tint", Color(.9, 1.5, 2.0), "set"),
-            ParameterModifier("coagulated_strand_lifetime", 1.0, "set")
+            ParameterModifier("strand_spawn_chance", 1.0, "set"),
+            ParameterModifier("strand_tint", Color(.5, 1.0, 2.0), "set"),
+            ParameterModifier("strand_lifetime", 0.2, "set"),
+            ParameterModifier("strand_scale", 0.5, "set"),
+            ParameterModifier("strand_movement", 0.5, "set")
         ],
         "Flesh": [
             ParameterModifier("rbc_spawn_chance", 0.5, "add"),
@@ -87,7 +89,7 @@ effect_table = {
             ParameterModifier("plant_spawn_rate", 0.5, "add")
         ],
         "Solid": [
-            ParameterModifier("coagulated_strand_spawn_chance", 0.01, "add"),
+            ParameterModifier("strand_spawn_chance", 0.01, "add"),
             ParameterModifier("platelet_spawn_chance", 0.5, "add")
         ]
     },
@@ -352,10 +354,11 @@ effect_table = {
     },
     "Releasing": {
         "Energy": [
-            ParameterModifier("coagulated_strand_spawn_chance", 0.5, "set"),
-            ParameterModifier("coagulated_strand_tint", Color(.9, 1.5, 2.0), "set"),
-            ParameterModifier("coagulated_strand_lifetime", 1.0, "set"),
-            ParameterModifier("coagulated_strand_scale", 0.1, "set")
+            ParameterModifier("strand_spawn_chance", 1.0, "set"),
+            ParameterModifier("strand_tint", Color(.5, 1.0, 2.0), "set"),
+            ParameterModifier("strand_lifetime", 0.2, "set"),
+            ParameterModifier("strand_scale", 0.2, "set"),
+            ParameterModifier("strand_movement", 0.5, "set")
         ],
         "Flesh": [],
         "Sound": [],
@@ -379,21 +382,21 @@ effect_table = {
     "Solidifying": {
         "Energy": [],
         "Flesh": [
-            ParameterModifier("coagulated_strand_spawn_chance", 0.02, "add")
+            ParameterModifier("strand_spawn_chance", 0.02, "add")
         ],
         "Sound": [],
         "Gas": [
-            ParameterModifier("coagulated_strand_spawn_chance", 0.01, "add")
+            ParameterModifier("strand_spawn_chance", 0.01, "add")
         ],
         "Krystal": [],
         "Light": [],
         "Liquid": [
-            ParameterModifier("coagulated_strand_spawn_chance", 0.01, "add")
+            ParameterModifier("strand_spawn_chance", 0.01, "add")
         ],
         "Mind": [],
         "Plant": [
-            ParameterModifier("coagulated_strand_spawn_chance", 0.01, "add"),
-            ParameterModifier("coagulated_strand_tint", Color(-0.2, 0.0, -0.2), "add")
+            ParameterModifier("strand_spawn_chance", 0.01, "add"),
+            ParameterModifier("strand_tint", Color(-0.2, 0.0, -0.2), "add")
         ],
         "Solid": []
     }
