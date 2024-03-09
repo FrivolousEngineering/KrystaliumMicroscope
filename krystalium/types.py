@@ -7,33 +7,49 @@ class Color:
     r: float
     g: float
     b: float
-    a: float = 1.0
+    a: float | None = None
 
     def __add__(self, other):
         if not isinstance(other, Color):
             raise TypeError()
 
+        alpha = None
+        if self.a is not None and other.a is not None:
+            alpha = self.a + other.a
+        elif self.a is not None:
+            alpha = self.a
+        elif other.a is not None:
+            alpha = other.a
+
         return Color(
             self.r + other.r,
             self.g + other.g,
             self.b + other.b,
-            self.a + other.a,
+            alpha,
         )
 
     def __mul__(self, other):
         if isinstance(other, Color):
+            alpha = None
+            if self.a is not None and other.a is not None:
+                alpha = self.a * other.a
+            elif self.a is not None:
+                alpha = self.a
+            elif other.a is not None:
+                alpha = other.a
+
             return Color(
                 self.r * other.r,
                 self.g * other.g,
                 self.b * other.b,
-                self.a + other.a,
+                alpha,
             )
         else:
             return Color(
                 self.r * other,
                 self.g * other,
                 self.b * other,
-                self.a * other,
+                self.a * other if self.a else None,
             )
 
     @classmethod

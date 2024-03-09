@@ -220,8 +220,6 @@ class UnrealCommunication:
         elif source_type == str:
             return "SetNiagaraVariableString", str(value)
         elif source_type == Color:
-            return "SetNiagaraVariableLinearColor", {"R": value.r, "G": value.g, "B": value.b, "A": value.a}
+            return "SetNiagaraVariableLinearColor", {"R": value.r, "G": value.g, "B": value.b, "A": value.a if value.a is not None else 1.0}
 
         return None, None
-
-
