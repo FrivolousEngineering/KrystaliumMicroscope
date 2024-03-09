@@ -202,6 +202,8 @@ class UnrealCommunication:
                 new_value = current_value * (modifier.value * modifier_strength)
             elif modifier.operation == "set":
                 new_value = modifier.value * modifier_strength
+            elif modifier.operation == "set_unscaled":
+                new_value = modifier.value
             else:
                 log.warning(f"Unknown modifier operation: {modifier.operation}")
 
