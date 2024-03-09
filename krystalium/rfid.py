@@ -78,6 +78,6 @@ class RfidController:
         for path in self.__config.serial_paths:
             s = serial.Serial(path, self.__config.baud_rate, timeout = 3)
             if s is not None:
-                log.info(f"Reading from serial at {self.__config.device_path}")
+                log.info(f"Reading from serial at {path}")
                 self.__serial = s
                 break
