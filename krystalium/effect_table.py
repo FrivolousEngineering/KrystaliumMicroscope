@@ -1,6 +1,9 @@
 from .types import Color, ParameterModifier
 
 effect_table = {
+    "None": {
+        "None": []
+    },
     "Increasing": {
         "Energy": [
             ParameterModifier("base_movement_speed", 2.0, "mul")
@@ -23,7 +26,7 @@ effect_table = {
         ],
         "Mind": [],
         "Plant": [
-            ParameterModifier("plant_spawn_rate", 2.0, "mul")
+            ParameterModifier("plant_spawn_chance", 2.0, "mul")
         ],
         "Solid": [
             ParameterModifier("platelet_spawn_chance", 2.0, "mul")
@@ -42,7 +45,7 @@ effect_table = {
             ParameterModifier("rbc_tint", Color(0.05, 0.15, 0.15), "add")
         ],
         "Krystal": [
-            ParameterModifier("Krystal_Spawn_chance", 0.5, "mul")
+            ParameterModifier("krystal_spawn_chance", 0.5, "mul")
         ],
         "Light": [],
         "Liquid": [
@@ -51,7 +54,7 @@ effect_table = {
         ],
         "Mind": [],
         "Plant": [
-            ParameterModifier("plant_spawn_rate", 0.5, "mul")
+            ParameterModifier("plant_spawn_chance", 0.5, "mul")
         ],
         "Solid": [
             ParameterModifier("platelet_spawn_chance", 0.5, "mul"),
@@ -61,10 +64,10 @@ effect_table = {
     "Creating": {
         "Energy": [
             ParameterModifier("strand_spawn_chance", 1.0, "set"),
-            ParameterModifier("strand_tint", Color(.5, 1.0, 2.0), "set"),
-            ParameterModifier("strand_lifetime", 0.2, "set"),
-            ParameterModifier("strand_scale", 0.5, "set"),
-            ParameterModifier("strand_movement", 0.5, "set")
+            ParameterModifier("strand_tint", Color(.5, 1.0, 2.0), "set_unscaled"),
+            ParameterModifier("strand_lifetime", 0.2, "set_unscaled"),
+            ParameterModifier("strand_scale", 0.5, "set_unscaled"),
+            ParameterModifier("strand_movement", 0.5, "set_unscaled")
         ],
         "Flesh": [
             ParameterModifier("rbc_spawn_chance", 0.5, "add"),
@@ -75,7 +78,7 @@ effect_table = {
         ],
         "Gas": [],
         "Krystal": [
-            ParameterModifier("krystal_spawn_chance", 1.0, "add")
+            ParameterModifier("krystal_spawn_chance", 0.1, "add")
         ],
         "Light": [
             ParameterModifier("base_color", Color(7.0, 10.0, 7.0), "set")
@@ -86,11 +89,11 @@ effect_table = {
         ],
         "Mind": [],
         "Plant": [
-            ParameterModifier("plant_spawn_rate", 0.5, "add")
+            ParameterModifier("plant_spawn_chance", 0.25, "add")
         ],
         "Solid": [
             ParameterModifier("strand_spawn_chance", 0.01, "add"),
-            ParameterModifier("platelet_spawn_chance", 0.5, "add")
+            ParameterModifier("platelet_spawn_chance", 0.5, "add"),
         ]
     },
     "Destroying": {
@@ -114,7 +117,7 @@ effect_table = {
         ],
         "Mind": [],
         "Plant": [
-            ParameterModifier("plant_spawn_rate", 0, "set")
+            ParameterModifier("plant_spawn_chance", 0, "set")
         ],
         "Solid": [
             ParameterModifier("base_spawn_rate", 0, "set")
@@ -154,7 +157,7 @@ effect_table = {
             ParameterModifier("base_movement_speed", 3.0, "add")
         ],
         "Krystal": [
-            ParameterModifier("krystal_Scale", -0.5, "add")
+            ParameterModifier("krystal_scale", -0.5, "add")
         ],
         "Light": [],
         "Liquid": [
@@ -169,7 +172,7 @@ effect_table = {
     "Fortifying": {
         "Energy": [],
         "Flesh": [
-            ParameterModifier("wbc_spawn_chance", 1.0, "add")
+            ParameterModifier("wbc_spawn_chance", 0.5, "add")
         ],
         "Sound": [],
         "Gas": [],
@@ -183,7 +186,7 @@ effect_table = {
     "Deteriorating": {
         "Energy": [],
         "Flesh": [
-            ParameterModifier("wbc_spawn_chance", -1.0, "add")
+            ParameterModifier("wbc_spawn_chance", -0.5, "add")
         ],
         "Sound": [],
         "Gas": [],
@@ -269,7 +272,7 @@ effect_table = {
         ],
         "Sound": [],
         "Gas": [
-            ParameterModifier("rbc_movement_jitterr", 0.5, "add")
+            ParameterModifier("rbc_movement_jitter", 0.5, "add")
         ],
         "Krystal": [
             ParameterModifier("krystal_movement_jitter", 0.5, "add")
@@ -336,8 +339,8 @@ effect_table = {
             ParameterModifier("rbc_scale", 0.5, "add")
         ],
         "Krystal": [
-            ParameterModifier("rbc_tint", Color(0.0, 1.0, 0.0), "add"),
-            ParameterModifier("wbc_tint", Color(0.0, 1.0, 0.0), "add")
+            ParameterModifier("rbc_tint", Color(0.0, 0.0, 1.0), "add"),
+            ParameterModifier("wbc_tint", Color(0.0, 0.0, 1.0), "add")
         ],
         "Light": [],
         "Liquid": [
@@ -355,10 +358,10 @@ effect_table = {
     "Releasing": {
         "Energy": [
             ParameterModifier("strand_spawn_chance", 1.0, "set"),
-            ParameterModifier("strand_tint", Color(.5, 1.0, 2.0), "set"),
-            ParameterModifier("strand_lifetime", 0.2, "set"),
-            ParameterModifier("strand_scale", 0.2, "set"),
-            ParameterModifier("strand_movement", 0.5, "set")
+            ParameterModifier("strand_tint", Color(.5, 1.0, 2.0), "set_unscaled"),
+            ParameterModifier("strand_lifetime", 0.2, "set_unscaled"),
+            ParameterModifier("strand_scale", 0.2, "set_unscaled"),
+            ParameterModifier("strand_movement", 0.5, "set_unscaled")
         ],
         "Flesh": [],
         "Sound": [],
@@ -382,7 +385,7 @@ effect_table = {
     "Solidifying": {
         "Energy": [],
         "Flesh": [
-            ParameterModifier("strand_spawn_chance", 0.02, "add")
+            ParameterModifier("strand_spawn_chance", 0.01, "add")
         ],
         "Sound": [],
         "Gas": [
