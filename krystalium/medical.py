@@ -199,7 +199,7 @@ class UnrealCommunication:
             if modifier.operation == "add":
                 new_value = current_value + modifier.value * modifier_strength
             elif modifier.operation == "mul":
-                new_value = current_value * (modifier.value * modifier_strength)
+                new_value = current_value * (modifier.value * (1.0 + modifier_strength / 2))
             elif modifier.operation == "set":
                 new_value = modifier.value * modifier_strength
             elif modifier.operation == "set_unscaled":
