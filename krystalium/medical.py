@@ -21,7 +21,7 @@ class Config:
 class SystemParameters:
     base_spawn_rate: float = Field(title = "Base Spawn Rate", default = 10.0)
     base_movement_speed: float = Field(title = "Base Movement", default = 6.0)
-    base_movement_jitter: float = Field(title = "Base Movement Jitter", default = 0.0)
+    base_movement_jitter: float = Field(title = "Base Movement Jitter", default = 0.1)
     base_color: Color = Field(title = "Base Color", default = Color(r = 0.7, g = 0.7, b = 0.7, a = 1.0))
 
     rbc_spawn_chance: float = Field(title = "RBC Spawn Chance", default = 0.5)
