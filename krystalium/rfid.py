@@ -61,5 +61,7 @@ class RfidController:
             line = line.rstrip()
             if line.startswith("Tag found:"):
                 self.__rfid_id = line.replace("Tag found: ", "")
+                log.debug(f"Detected tag {self.__rfid_id}")
             elif line.startswith("Tag lost:"):
+                log.debug(f"Lost tag {self.__rfid_id}")
                 self.__rfid_id = ""
