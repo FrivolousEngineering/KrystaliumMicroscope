@@ -3,6 +3,7 @@ import logging
 
 import aiohttp
 import pydantic
+from async_lru import alru_cache
 
 
 log = logging.getLogger(__name__)
@@ -64,6 +65,7 @@ class Api:
 
         return blood_task.result(), refined_task.result()
 
+    @alru_cache(maxsize = 500)
     async def get_blood_sample(self, id: str) -> BloodSample | None:
         async with self.__session.get(f"/blood/{id}") as response:
             if not response.ok:
@@ -78,6 +80,7 @@ class Api:
 
             return sample
 
+    @alru_cache(maxsize = 500)
     async def get_refined_sample(self, id: str) -> RefinedSample | None:
         async with self.__session.get(f"/refined/{id}") as response:
             if not response.ok:
