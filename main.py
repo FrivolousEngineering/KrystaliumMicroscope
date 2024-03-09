@@ -48,7 +48,12 @@ async def main():
                 continue
 
             if not unreal.active:
-                blood_sample, krystal_sample = await api.get_samples(first_id, second_id)
+                try:
+                    blood_sample, krystal_sample = await api.get_samples(first_id, second_id)
+                except Exception:
+                    logging.exception("Could not find samples")
+                    continue
+
                 if not blood_sample or not krystal_sample:
                     continue
 
