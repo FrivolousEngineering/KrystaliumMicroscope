@@ -13,6 +13,7 @@ log = logging.getLogger(__name__)
 @pydantic.dataclasses.dataclass(kw_only = True, frozen = True)
 class Config:
     device_path: str = "rfid"
+    serial_paths: list[str] = pydantic.Field(default_factory = list)
     use_pipe: bool = True
     baud_rate: int = 9600
 
@@ -34,9 +35,7 @@ class RfidController:
             os.mkfifo(self.__path)
             log.info(f"Created FIFO at {self.__path}")
         else:
-            self.__serial = serial.Serial(self.__config.device_path, self.__config.baud_rate, timeout = 3)
-            if self.__serial is not None:
-                log.info(f"Reading from serial at {self.__config.device_path}")
+            self.__create_serial()
 
         self.__running = True
         self.__thread = threading.Thread(target = self.__detect, daemon=True)
@@ -56,7 +55,12 @@ class RfidController:
             if self.__path:
                 line = f.readline()
             else:
-                line = self.__serial.readline().decode("utf-8")
+                try:
+                    line = self.__serial.readline().decode("utf-8")
+                except serial.SerialException:
+                    log.exception("Error reading serial")
+                    self.__create_serial()
+                    continue
 
             line = line.rstrip()
             if line.startswith("Tag found:"):
@@ -65,3 +69,11 @@ class RfidController:
             elif line.startswith("Tag lost:"):
                 log.debug(f"Lost tag {self.__rfid_id}")
                 self.__rfid_id = ""
+
+    def __create_serial(self):
+        for path in self.__config.serial_paths:
+            s = serial.Serial(path, self.__config.baud_rate, timeout = 3)
+            if s is not None:
+                log.info(f"Reading from serial at {self.__config.device_path}")
+                self.__serial = s
+                break
