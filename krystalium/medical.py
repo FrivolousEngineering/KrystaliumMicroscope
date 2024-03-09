@@ -54,7 +54,7 @@ class SystemParameters:
 
     krystal_spawn_chance: float = Field(title = "Krystal Spawn Chance", default = 0.0)
     krystal_tint: Color = Field(title = "Krystal Tint", default = Color(r = -0.4, g = -0.3, b = 2.0, a = 0.0))
-    krystal_scale: float = Field(title = "Krystal Scale", default = 1.0)
+    krystal_scale: float = Field(title = "Krystal Scale", default = 0.5)
     krystal_movement_multiplier: float = Field(title = "Krystal Movement Multiplier", default = 1.0)
     krystal_movement_jitter: float = Field(title = "Krystal Movement Jitter", default = 0.0)
 
