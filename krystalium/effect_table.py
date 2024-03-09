@@ -127,7 +127,9 @@ effect_table = {
         "Energy": [],
         "Flesh": [
             ParameterModifier("base_movement_speed", 2.0, "mul"),
-            ParameterModifier("base_spawn_rate", 0.5, "mul")
+            ParameterModifier("base_spawn_rate", 0.5, "mul"),
+            ParameterModifier("rbc_scale", 0.5, "add"),
+            ParameterModifier("wbc_scale", 0.5, "add"),
         ],
         "Sound": [],
         "Gas": [
@@ -286,7 +288,8 @@ effect_table = {
             ParameterModifier("plant_movement_jitter", 0.5, "add")
         ],
         "Solid": [
-            ParameterModifier("platelet_movement_jitter", 0.5, "add")
+            ParameterModifier("platelet_movement_jitter", 0.5, "add"),
+            ParameterModifier("strand_movement", 0.1, "add"),
         ]
     },
     "Conducting": {
