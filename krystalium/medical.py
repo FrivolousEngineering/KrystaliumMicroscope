@@ -193,7 +193,7 @@ class UnrealCommunication:
     def apply_modifiers(self, parameters: SystemParameters, modifiers: list[ParameterModifier], strength: int):
         for modifier in modifiers:
             current_value = getattr(parameters, modifier.parameter)
-            modifier_strength = 1.0 + ((strength - 2) / 10) * 0.5
+            modifier_strength = 0.05 + ((strength - 2) / 10) * 0.95
 
             new_value = current_value
             if modifier.operation == "add":
