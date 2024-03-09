@@ -40,14 +40,14 @@ class SystemParameters:
     wbc_movement_multiplier: float = Field(title = "WBC Movement Multiplier", default = 2.0)
     wbc_movement_jitter: float = Field(title = "WBC Movement Jitter", default = 0.0)
 
-    platelet_spawn_chance: float | None = Field(title = "Platelet Spawn Chance", default = 0.1)
+    platelet_spawn_chance: float = Field(title = "Platelet Spawn Chance", default = 0.1)
     platelet_tint: Color = Field(title = "Platelet Tint", default = Color(r = 0.0, g = 0.0, b = 0.0, a = 0.0))
     platelet_scale: float = Field(title = "Platelet Scale", default = 1.0)
     platelet_movement_multiplier: float = Field(title = "Platelet Movement Multiplier", default = 0.75)
     platelet_movement_jitter: float = Field(title = "Platelet Movement Jitter", default = 0.0)
 
-    strand_spawn_chance: float | None = Field(title = "Coagulated Strand Spawn Chance", default = 0.0)
     strand_tint: Color = Field(title = "Coagulated Strand Tint", default = Color(r = -0.2, g = -0.2, b = -0.2, a = 0.0))
+    strand_spawn_chance: float = Field(title = "Coagulated Strand Spawn Chance", default = 0.0)
     strand_scale: float = Field(title = "Coagulated Strand Scale", default = 1.0)
     strand_lifetime: float = Field(title = "Coagulated Strand Lifetime", default = 1000.0)
     strand_movement: float = Field(title = "Coagulated Strand Movement", default = 0.03)
