@@ -24,6 +24,7 @@ class RfidController:
         self.__running = False
         self.__rfid_id = ""
         self.__path = None
+        self.__serial = None
 
     @property
     def rfid_id(self):
@@ -55,11 +56,14 @@ class RfidController:
             if self.__path:
                 line = f.readline()
             else:
+                if self.__serial is None:
+                    self.__create_serial()
+
                 try:
                     line = self.__serial.readline().decode("utf-8")
                 except serial.SerialException:
                     log.exception("Error reading serial")
-                    self.__create_serial()
+                    self.__serial = None
                     continue
 
             line = line.rstrip()
