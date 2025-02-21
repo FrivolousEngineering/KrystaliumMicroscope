@@ -1,5 +1,7 @@
 import asyncio
 import logging
+import types
+from typing import Any
 
 import aiohttp
 import pydantic
@@ -9,6 +11,30 @@ from .component import Component
 
 
 log = logging.getLogger(__name__)
+
+
+@pydantic.dataclasses.dataclass(kw_only = True, frozen = True)
+class JsonApiObject:
+    id: str
+    type: str
+    attributes: object = pydantic.Field(default_factory = dict)
+    relationships: object = pydantic.Field(default_factory = dict)
+    included: list["JsonApiObject"] = pydantic.Field(default_factory = list)
+
+    @classmethod
+    def from_json(cls, json: dict[str, Any], included: dict[str, Any] | None = None) -> "JsonApiObject":
+        data = json["data"] if "data" in json else json
+
+        if included is None:
+            included = [cls.from_json(entry) for entry in json.get("included", [])]
+
+        return cls(
+            id = data["id"],
+            type = data["type"],
+            attributes = types.SimpleNamespace(**data["attributes"]),
+            relationships = types.SimpleNamespace(**data.get("relationships", {})),
+            included = included,
+        )
 
 
 @pydantic.dataclasses.dataclass(kw_only = True, frozen = True)
