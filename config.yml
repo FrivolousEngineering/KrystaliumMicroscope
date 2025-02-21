@@ -1,7 +1,4 @@
-rfid_first:
-  device_path: "/dev/ttyACM1"
-  use_pipe: False
-
-rfid_second:
-  device_path: "/dev/ttyUSB1"
-  use_pipe: False
+serial:
+    patterns:
+    -   "ttyUSB*"
+    -   "ttyACM*"
