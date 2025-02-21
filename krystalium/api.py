@@ -141,6 +141,16 @@ class Api(Component):
         return blood_task.result(), refined_task.result()
 
     @alru_cache(maxsize = 500)
+    async def get_effect(self, id: str) -> Effect | None:
+        async with self.__session.get(f"/effect/{id}") as response:
+            if not response.ok:
+                log.warning(f"Could not get effect with ID {id}")
+                return None
+
+            jsonapi = JsonApiObject.from_json(await response.json())
+            return Effect.from_jsonapi(jsonapi)
+
+    @alru_cache(maxsize = 500)
     async def get_blood_sample(self, id: str) -> BloodSample | None:
         async with self.__session.get(f"/blood/{id}") as response:
             if not response.ok:
