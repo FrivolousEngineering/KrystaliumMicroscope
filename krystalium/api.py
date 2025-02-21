@@ -5,6 +5,8 @@ import aiohttp
 import pydantic
 from async_lru import alru_cache
 
+from .component import Component
+
 
 log = logging.getLogger(__name__)
 
@@ -38,8 +40,9 @@ class Config:
     port: int = 8000
 
 
-class Api:
+class Api(Component):
     def __init__(self, config: Config) -> None:
+        super().__init__()
         self.__config = config
 
     async def start(self) -> None:
