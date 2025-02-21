@@ -1,9 +1,7 @@
 import logging
 import dataclasses
 from typing import Any
-# from pathlib import Path
 
-# import asyncio
 import aiohttp
 from pydantic import Field
 from pydantic.dataclasses import dataclass
@@ -171,6 +169,19 @@ class UnrealCommunication(Component):
             log.warning(f"Unknown action/target combination for secondary: {krystal_sample.secondary_action}/{krystal_sample.secondary_target}")
         else:
             self.apply_modifiers(parameters, secondary_modifiers, krystal_sample.strength)
+
+        await self.__batch_call(parameters.to_batch())
+
+    async def update_from_enlisted(self, enlisted: Enlisted) -> None:
+        if not self.__session:
+            return
+
+        parameters = SystemParameters()
+
+        for effect in enlisted.effects:
+            modifiers = et.get_modifiers(effect.action, effect.target)
+            if modifiers is not None:
+                self.apply_modifiers(parameters, modifiers, effect.strength)
 
         await self.__batch_call(parameters.to_batch())
 
