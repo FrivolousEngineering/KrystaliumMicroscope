@@ -1,83 +1,114 @@
-import os
 import logging
-import threading
-from pathlib import Path
 
-import serial
-import pydantic
+from .api import BloodSample, RefinedSample, Effect
+from .component import Component
+from .serialcontroller import Serial, SerialController
 
 
 log = logging.getLogger(__name__)
 
 
-@pydantic.dataclasses.dataclass(kw_only = True, frozen = True)
-class Config:
-    device_path: str = "rfid"
-    serial_paths: list[str] = pydantic.Field(default_factory = list)
-    use_pipe: bool = True
-    baud_rate: int = 9600
+def purity_to_int(purity: str) -> int:
+    match purity.upper():
+        case "POLLUTED": return 1
+        case "TARNISHED": return 2
+        case "DIRTY": return 3
+        case "BLEMISHED": return 4
+        case "IMPURE": return 5
+        case "UNBLEMISHED": return 6
+        case "LUCID": return 7
+        case "STAINLESS": return 8
+        case "PRISTINE": return 9
+        case "IMMACULATE": return 10
+        case "PERFECT": return 11
+        case _: raise RuntimeError(f"Unknown purity {purity}")
 
 
-class RfidController:
-    def __init__(self, config: Config) -> None:
-        self.__config = config
-        self.__running = False
+class Rfid(Component):
+    def __init__(self, *, controller: SerialController) -> None:
+        super().__init__(interval = 1)
         self.__rfid_id = ""
-        self.__path = None
-        self.__serial = None
+        self.__blood_sample: BloodSample | None = None
+        self.__refined_sample: RefinedSample | None = None
+        self.__controller = controller
+
+        self.__serial_devices: dict[str, Serial] = {}
 
     @property
     def rfid_id(self):
         return self.__rfid_id
 
-    async def start(self) -> None:
-        if self.__config.use_pipe:
-            self.__path = Path() / self.__config.device_path
-            os.mkfifo(self.__path)
-            log.info(f"Created FIFO at {self.__path}")
-        else:
-            self.__create_serial()
+    @property
+    def blood_sample(self) -> BloodSample | None:
+        return self.__blood_sample
 
-        self.__running = True
-        self.__thread = threading.Thread(target = self.__detect, daemon=True)
-        self.__thread.start()
+    @property
+    def refined_sample(self) -> RefinedSample | None:
+        return self.__refined_sample
 
-    async def stop(self) -> None:
-        self.__runnng = False
+    async def update(self, elapsed: float) -> None:
+        serials = self.__controller.devices_by_name("rfid1")
+        serials += self.__controller.devices_by_name("rfid2")
 
-        if self.__path:
-            os.unlink(self.__path)
+        for serial in serials:
+            if serial.name in self.__serial_devices:
+                continue
 
-    def __detect(self):
-        if self.__path:
-            f = open(self.__path)
+            self.__serial_devices[serial.name] = serial
+            serial.set_callback(self.__process)
+            log.info(f"Found serial device {serial.name}")
 
-        while self.__running:
-            if self.__path:
-                line = f.readline()
-            else:
-                if self.__serial is None:
-                    self.__create_serial()
+    def __process(self, line):
+        if line.startswith("tag found:"):
+            self.__handle_tag(line.replace("tag found: ", ""))
+            log.debug(f"Detected tag {self.__rfid_id}")
+        elif line.startswith("tag lost:"):
+            log.debug(f"Lost tag {self.__rfid_id}")
+            if self.__blood_sample and self.__blood_sample.rfid_id == self.__rfid_id:
+                self.__blood_sample = None
+            if self.__refined_sample and self.__refined_sample.rfid_id == self.__rfid_id:
+                self.__refined_sample = None
+            self.__rfid_id = ""
+        elif line.startswith("traits: "):
+            self.__handle_tag(line.replace("traits: ", ""))
 
-                try:
-                    line = self.__serial.readline().decode("utf-8")
-                except serial.SerialException:
-                    log.exception("Error reading serial")
-                    self.__serial = None
-                    continue
+    def __handle_tag(self, line: str):
+        parts = line.split(" ")
 
-            line = line.rstrip()
-            if line.startswith("Tag found:"):
-                self.__rfid_id = line.replace("Tag found: ", "")
-                log.debug(f"Detected tag {self.__rfid_id}")
-            elif line.startswith("Tag lost:"):
-                log.debug(f"Lost tag {self.__rfid_id}")
-                self.__rfid_id = ""
+        self.__rfid_id = parts[0]
 
-    def __create_serial(self):
-        for path in self.__config.serial_paths:
-            s = serial.Serial(path, self.__config.baud_rate, timeout = 3)
-            if s is not None:
-                log.info(f"Reading from serial at {path}")
-                self.__serial = s
-                break
+        match parts[1]:
+            case "raw":
+                log.warning("Raw samples are not supported")
+            case "refined":
+                self.__handle_refined_sample(parts[2:])
+            case "blood":
+                self.__handle_blood_sample(parts[2:])
+            case _:
+                log.warning(f"Unrecognised sample {parts[0]} detected")
+
+    def __handle_refined_sample(self, parts: list[str]) -> None:
+        self.__refined_sample = RefinedSample(
+            id = -1,
+            rfid_id = self.__rfid_id,
+            strength = purity_to_int(parts[5]),
+            primary_action = parts[0],
+            primary_target = parts[1],
+            secondary_action = parts[2],
+            secondary_target = parts[3],
+        )
+
+    def __handle_blood_sample(self, parts: list[str]) -> None:
+        self.__blood_sample = BloodSample(
+            id = -1,
+            rfid_id = self.__rfid_id,
+            # strength = int(parts[2]),
+            strength = purity_to_int(parts[5]),
+            effect = Effect(
+                id = -1,
+                name = "Blood Sample Effect",
+                strength = -1,
+                action = parts[0],
+                target = parts[1],
+            )
+        )
