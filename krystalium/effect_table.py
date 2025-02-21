@@ -407,3 +407,13 @@ effect_table = {
         "Solid": []
     }
 }
+
+
+def get_modifiers(action: str, target: str) -> list[ParameterModifier] | None:
+    if action not in effect_table:
+        return None
+
+    if target not in effect_table[action]:
+        return None
+
+    return effect_table[action][target]
