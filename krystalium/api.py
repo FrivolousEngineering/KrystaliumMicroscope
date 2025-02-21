@@ -38,13 +38,21 @@ class JsonApiObject:
 
 
 @pydantic.dataclasses.dataclass(kw_only = True, frozen = True)
-class BloodSample:
+class Effect:
     id: int
-    rfid_id: str
-    origin: str
+    name: str
     strength: int
     action: str
     target: str
+
+
+
+@pydantic.dataclasses.dataclass(kw_only = True, frozen = True)
+class BloodSample:
+    id: int
+    rfid_id: str
+    strength: int
+    effect: Effect
 
 
 @pydantic.dataclasses.dataclass(kw_only = True, frozen = True)
@@ -52,12 +60,11 @@ class RefinedSample:
     id: int
     rfid_id: str
 
+    strength: int
     primary_action: str
     primary_target: str
     secondary_action: str
     secondary_target: str
-    purity: str
-    purity_score: int
 
 
 @pydantic.dataclasses.dataclass(kw_only = True, frozen = True)
