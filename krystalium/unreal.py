@@ -1,12 +1,18 @@
 import logging
 import dataclasses
+from typing import Any
+# from pathlib import Path
 
+# import asyncio
 import aiohttp
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
+from .component import Component
 from .types import Color, ParameterModifier
-from .effect_table import effect_table
+from . import effect_table as et
+from .api import BloodSample, RefinedSample, Enlisted
+
 
 log = logging.getLogger(__name__)
 
@@ -69,74 +75,14 @@ class SystemParameters:
     dead_scale: float = Field(title = "Dead Cell Scale", default = 1.0)
     dead_movement_multiplier: float = Field(title = "Dead Cell Movement Multiplier", default = 1.0)
 
-
-class UnrealCommunication:
-    SystemObjectPath: str = "/Game/Medical/L_Medical.L_Medical:PersistentLevel.NiagaraActor_1.NiagaraComponent0"
-    LevelObjectPath: str = "/Game/Medical/L_Medical.L_Medical:PersistentLevel.L_Medical_C_{}"
-
-    def __init__(self, config: Config) -> None:
-        self.__config = config
-        self.__active = False
-        self.__actual_level_object_path = ""
-
-    @property
-    def active(self) -> bool:
-        return self.__active
-
-    async def set_active(self, active: bool) -> None:
-        if active == self.__active:
-            return
-
-        self.__active = active
-        if self.__active:
-            await self.play_startup()
-        else:
-            await self.play_stop()
-
-    async def start(self):
-        self.__session = aiohttp.ClientSession(f"http://{self.__config.host}:{self.__config.port}")
-
-        # To call methods on the Level blueprint we need to get the instance of the blueprint.
-        # Unfortunately the exact object path changes per build, so try and iterate until we
-        # find it.
-        for i in range(10):
-            path = self.LevelObjectPath.format(i)
-            async with self.__session.put("/remote/object/describe", json = {"objectPath": path}) as response:
-                if response.ok:
-                    self.__actual_level_object_path = path
-                    break
-        else:
-            log.warning("Could not find level object path")
-
-    async def stop(self):
-        await self.play_stop()
-        await self.__session.close()
-
-    async def update_from_samples(self, blood_sample, krystal_sample):
-        parameters = SystemParameters()
-
-        blood_modifiers = effect_table.get(blood_sample.action, {}).get(blood_sample.target, [])
-        if not blood_modifiers:
-            log.warning(f"Unknown blood sample origin: {blood_sample.origin}")
-        self.apply_modifiers(parameters, blood_modifiers, blood_sample.strength)
-
-        primary_modifiers = effect_table.get(krystal_sample.primary_action, {}).get(krystal_sample.primary_target, [])
-        if not primary_modifiers:
-            log.warning(f"Unknown action/target combination: {krystal_sample.primary_action}/{krystal_sample.primary_target}")
-        self.apply_modifiers(parameters, primary_modifiers, krystal_sample.purity_score)
-
-        secondary_modifiers = effect_table.get(krystal_sample.secondary_action, {}).get(krystal_sample.secondary_target, [])
-        if not secondary_modifiers:
-            log.warning(f"Unknown action/target combination: {krystal_sample.secondary_action}/{krystal_sample.secondary_target}")
-        self.apply_modifiers(parameters, secondary_modifiers, krystal_sample.purity_score)
-
-        batch = []
-        for field in dataclasses.fields(parameters):
-            value = getattr(parameters, field.name, None)
+    def to_batch(self) -> list[dict]:
+        batch: list[dict] = []
+        for field in dataclasses.fields(self):
+            value = getattr(self, field.name, None)
             if value is None:
                 continue
 
-            niagara_function, niagara_value = self.__toNiagara(field.type, value)
+            niagara_function, niagara_value = UnrealCommunication.toNiagara(field.type, value)
             if niagara_function is None:
                 continue
 
@@ -145,7 +91,7 @@ class UnrealCommunication:
                 "URL": "/remote/object/call",
                 "Verb": "PUT",
                 "Body": {
-                    "objectPath": self.SystemObjectPath,
+                    "objectPath": UnrealCommunication.SystemObjectPath,
                     "functionName": niagara_function,
                     "parameters": {
                         "InVariableName": field.default.title,
@@ -156,27 +102,104 @@ class UnrealCommunication:
 
             batch.append(data)
 
-        if batch:
-            # Can't use actual batch API as it crashes for some reason
-            for entry in batch:
-                async with self.__session.put(entry["URL"], json = entry["Body"]) as response:
-                    if not response.ok:
-                        log.warning(f"Batch execution failed ({response.status}): {response.reason} {await response.text()}")
+        return batch
 
-    async def reset(self):
-        await self.__rpc_call(object_path = self.__actual_level_object_path, function_name = "Reset")
+
+class UnrealCommunication(Component):
+    SystemObjectPath: str = "/Game/Medical/L_Medical.L_Medical:PersistentLevel.NiagaraActor_1.NiagaraComponent0"
+    ControllerObjectPath: str = "/Game/Medical/L_Medical.L_Medical:PersistentLevel.BP_Controller_C_1"
+
+    def __init__(self, config: Config) -> None:
+        super().__init__()
+        self.__config = config
+        self.__active = False
+        self.__session: aiohttp.ClientSession | None = None
+
+    @property
+    def connected(self) -> bool:
+        return self.__session is not None
+
+    @property
+    def active(self) -> bool:
+        return self.__active
+
+    async def set_active(self, active: bool) -> None:
+        if active == self.__active:
+            return
+
+        self.__active = active
+
+    async def start(self) -> None:
+        self.__session = aiohttp.ClientSession(f"http://{self.__config.host}:{self.__config.port}")
+
+        try:
+            await self.__session.get("/remote/info")
+
+            await self.reset()
+            await self.message("Enter Code:")
+        except aiohttp.ClientConnectionError:
+            await self.__session.close()
+            self.__session = None
+            log.warning("Could not connect to Unreal application")
+
+    async def stop(self):
+        await self.clear_numbers()
+
+        if self.__session:
+            await self.__session.close()
+
+    async def update_from_samples(self, blood_sample: BloodSample, krystal_sample: RefinedSample) -> None:
+        if not self.__session:
+            return
+
+        parameters = SystemParameters()
+
+        blood_modifiers = et.get_modifiers(blood_sample.effect.action, blood_sample.effect.target)
+        if blood_modifiers is None:
+            log.warning(f"Unknown action/target combination for blood sample: {blood_sample.effect.action}/{blood_sample.effect.target}")
+        else:
+            self.apply_modifiers(parameters, blood_modifiers, blood_sample.strength)
+
+        primary_modifiers = et.get_modifiers(krystal_sample.primary_action, krystal_sample.primary_target)
+        if primary_modifiers is None:
+            log.warning(f"Unknown action/target combination for primary: {krystal_sample.primary_action}/{krystal_sample.primary_target}")
+        else:
+            self.apply_modifiers(parameters, primary_modifiers, krystal_sample.strength)
+
+        secondary_modifiers = et.get_modifiers(krystal_sample.secondary_action, krystal_sample.secondary_target)
+        if secondary_modifiers is None:
+            log.warning(f"Unknown action/target combination for secondary: {krystal_sample.secondary_action}/{krystal_sample.secondary_target}")
+        else:
+            self.apply_modifiers(parameters, secondary_modifiers, krystal_sample.strength)
+
+        await self.__batch_call(parameters.to_batch())
+
+    async def set_numbers(self, numbers: list[int]) -> None:
+        await self.__rpc_call(object_path = self.ControllerObjectPath, function_name = "SetNumbers", Numbers = numbers)
+
+    async def clear_numbers(self) -> None:
+        await self.__rpc_call(object_path = self.ControllerObjectPath, function_name = "ClearNumbers")
+
+    async def valid(self):
+        await self.__rpc_call(object_path = self.ControllerObjectPath, function_name = "Valid")
+
+    async def invalid(self):
+        await self.__rpc_call(object_path = self.ControllerObjectPath, function_name = "Invalid")
 
     async def reinitialize(self):
         await self.__rpc_call(object_path = self.SystemObjectPath, function_name = "ReinitializeSystem")
 
-    async def play_startup(self):
-        await self.__rpc_call(object_path = self.__actual_level_object_path, function_name = "PlayStartup")
+    async def message(self, message: str) -> None:
+        await self.__rpc_call(object_path = self.ControllerObjectPath, function_name = "Message", Message = message)
 
-    async def play_stop(self):
-        await self.__rpc_call(object_path = self.__actual_level_object_path, function_name = "PlayStop")
+    async def reset(self) -> None:
+        await self.__rpc_call(object_path = self.ControllerObjectPath, function_name = "Reset")
 
     async def __rpc_call(self, *, object_path: str, function_name: str, **kwargs) -> bool:
-        data = {
+        if not self.__session:
+            return False
+
+        data: dict[str, Any] = {
             "objectPath": object_path,
             "functionName": function_name,
         }
@@ -189,6 +212,19 @@ class UnrealCommunication:
                 return False
             else:
                 return True
+
+    async def __batch_call(self, batch: list[dict]) -> bool:
+        if not self.__session:
+            return False
+
+        # Can't use actual batch API as it crashes for some reason
+        for entry in batch:
+            async with self.__session.put(entry["URL"], json = entry["Body"]) as response:
+                if not response.ok:
+                    log.warning(f"Batch execution failed ({response.status}): {response.reason} {await response.text()}")
+                    return False
+
+        return True
 
     def apply_modifiers(self, parameters: SystemParameters, modifiers: list[ParameterModifier], strength: int):
         for modifier in modifiers:
@@ -210,7 +246,7 @@ class UnrealCommunication:
             setattr(parameters, modifier.parameter, new_value)
 
     @staticmethod
-    def __toNiagara(source_type, value):
+    def toNiagara(source_type, value):
         if source_type == bool:
             return "SetNiagaraVariableBool", bool(value)
         elif source_type == int:
