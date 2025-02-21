@@ -105,6 +105,31 @@ class RefinedSample:
         )
 
 
+@pydantic.dataclasses.dataclass(kw_only = True, frozen = True)
+class Enlisted:
+    id: int
+
+    name: str
+    number: str
+
+    effects: list[Effect] = pydantic.Field(default_factory = list)
+
+    @classmethod
+    def from_jsonapi(cls, json_api: JsonApiObject) -> "Enlisted":
+        effect_ids = [entry["id"] for entry in json_api.relationships.effects["data"]]
+
+        effects = []
+        for include in json_api.included:
+            if include.id in effect_ids:
+                effects.append(Effect.from_jsonapi(include))
+
+        return cls(
+            id = int(json_api.id),
+            name = json_api.attributes.name,
+            number = json_api.attributes.number,
+            effects = effects
+        )
+
 
 @pydantic.dataclasses.dataclass(kw_only = True, frozen = True)
 class Config:
@@ -170,3 +195,25 @@ class Api(Component):
             jsonapi = JsonApiObject.from_json(await response.json())
             return RefinedSample.from_jsonapi(jsonapi)
 
+    @alru_cache(maxsize = 500)
+    async def get_enlisted(self, id: str) -> Enlisted | None:
+        async with self.__session.get(f"/enlisted/{id}?include=effects") as response:
+            if not response.ok:
+                log.warning(f"Could not get enlisted with ID {id}")
+                return None
+
+            jsonapi = JsonApiObject.from_json(await response.json())
+            return Enlisted.from_jsonapi(jsonapi)
+
+    @alru_cache(maxsize = 500)
+    async def get_enlisted_by_number(self, number: str) -> Enlisted | None:
+        async with self.__session.get(f"/enlisted?filter[number]={number}&include=effects") as response:
+            if not response.ok:
+                return None
+
+            json = await response.json()
+            if len(json["data"]) > 0:
+                jsonapi = JsonApiObject.from_json(json["data"][0])
+                return Enlisted.from_jsonapi(jsonapi)
+
+            return None
