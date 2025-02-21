@@ -152,18 +152,13 @@ class Api(Component):
 
     @alru_cache(maxsize = 500)
     async def get_blood_sample(self, id: str) -> BloodSample | None:
-        async with self.__session.get(f"/blood/{id}") as response:
+        async with self.__session.get(f"/blood/{id}?include=") as response:
             if not response.ok:
                 log.warning(f"Could not get blood sample with ID {id}")
                 return None
 
-            json = await response.json()
-
-            sample = BloodSample(**json)
-
-            log.debug(f"Found blood sample: {sample}")
-
-            return sample
+            jsonapi = JsonApiObject.from_json(await response.json())
+            return BloodSample.from_jsonapi(jsonapi)
 
     @alru_cache(maxsize = 500)
     async def get_refined_sample(self, id: str) -> RefinedSample | None:
@@ -172,10 +167,6 @@ class Api(Component):
                 log.warning(f"Could not get refined sample with ID {id}")
                 return None
 
-            json = await response.json()
+            jsonapi = JsonApiObject.from_json(await response.json())
+            return RefinedSample.from_jsonapi(jsonapi)
 
-            sample = RefinedSample(**json)
-
-            log.debug(f"Found refined sample: {sample}")
-
-            return sample
