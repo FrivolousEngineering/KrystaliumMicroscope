@@ -45,6 +45,15 @@ class Effect:
     action: str
     target: str
 
+    @classmethod
+    def from_jsonapi(cls, json_api: JsonApiObject) -> "Effect":
+        return cls(
+            id = int(json_api.id),
+            name = json_api.attributes.name,
+            strength = int(json_api.attributes.strength),
+            action = json_api.attributes.action,
+            target = json_api.attributes.target,
+        )
 
 
 @pydantic.dataclasses.dataclass(kw_only = True, frozen = True)
@@ -53,6 +62,23 @@ class BloodSample:
     rfid_id: str
     strength: int
     effect: Effect
+
+    @classmethod
+    def from_jsonapi(cls, json_api: JsonApiObject) -> "BloodSample":
+        effect_id = json_api.relationships.effect["data"]["id"]
+
+        effect = None
+        for include in json_api.included:
+            if include.id == effect_id:
+                effect = Effect.from_jsonapi(include)
+                break
+
+        return cls(
+            id = int(json_api.id),
+            rfid_id = json_api.attributes.rfid_id,
+            strength = json_api.attributes.strength,
+            effect = effect,
+        )
 
 
 @pydantic.dataclasses.dataclass(kw_only = True, frozen = True)
@@ -65,6 +91,19 @@ class RefinedSample:
     primary_target: str
     secondary_action: str
     secondary_target: str
+
+    @classmethod
+    def from_jsonapi(cls, json_api: JsonApiObject) -> "RefinedSample":
+        return cls(
+            id = int(json_api.id),
+            rfid_id = json_api.attributes.rfid_id,
+            strength = int(json_api.attributes.strength),
+            primary_action = json_api.attributes.primary_action,
+            primary_target = json_api.attributes.primary_target,
+            secondary_action = json_api.attributes.secondary_action,
+            secondary_target = json_api.attributes.secondary_target,
+        )
+
 
 
 @pydantic.dataclasses.dataclass(kw_only = True, frozen = True)
