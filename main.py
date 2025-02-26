@@ -162,6 +162,13 @@ class Main(krystalium.component.MainLoop):
         elif device.device_name.startswith("rfid"):
             self.__rfid.add_device(device)
 
+    def on_serial_device_removed(self, device):
+        if device.device_name == "rotary":
+            self.__number_input.set_device(None)
+        elif device.device_name.startswith("rfid"):
+            self.__rfid.remove_device(device)
+
+
 if __name__ == "__main__":
     logging.basicConfig(level = logging.DEBUG)
 
