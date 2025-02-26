@@ -28,7 +28,7 @@ class Serial(Component):
         self.__path: Path = path
         self.__callback: Callable[[str], None] | None = None
         self.__device_name = ""
-        self.__serial = None
+        self.__serial: serial.Serial | None = None
 
     @property
     def path(self):
@@ -38,7 +38,7 @@ class Serial(Component):
     def device_name(self):
         return self.__device_name
 
-    def set_callback(self, callback: Callable[[str], None]) -> None:
+    def set_callback(self, callback: Callable[[str], None] | None) -> None:
         self.__callback = callback
 
     async def start(self) -> None:
@@ -46,13 +46,13 @@ class Serial(Component):
         self.__thread.start()
 
     async def stop(self) -> None:
-        self.__serial.close()
-        self.__serial = None
+        if self.__serial:
+            self.__serial.close()
+            self.__serial = None
         self.__thread.join()
 
     def __read(self):
         self.__serial = serial.Serial(str(self.__path), baudrate = self.__baud_rate, timeout = 1)
-        self.__serial.write(b"NAME\n")
 
         while serial:
             try:
@@ -72,6 +72,11 @@ class Serial(Component):
                     self.__callback(line)
             except SerialException:
                 self.__controller.device_lost(self)
+                break
+            except Exception:
+                log.exception("Unexpected exception reading serial")
+                self.__controller.device_lost(self)
+                break
 
 
 class SerialController(Component):
@@ -87,6 +92,7 @@ class SerialController(Component):
     def set_callbacks(self, device_added: Callable[[Serial], None], device_removed: Callable[[Serial], None]) -> None:
         self.__device_added_callback = device_added
         self.__device_removed_callback = device_removed
+
     def devices_by_name(self, name: str) -> list[Serial]:
         return [device for device in self.__devices.values() if device.device_name == name]
 
