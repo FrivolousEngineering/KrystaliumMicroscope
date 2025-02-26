@@ -8,9 +8,8 @@ log = logging.getLogger(__name__)
 
 
 class NumberInput(Component):
-    def __init__(self, *, name: str | None = None, controller) -> None:
-        super().__init__(name = name, interval = 1.0)
-        self.__controller = controller
+    def __init__(self, *, name: str | None = None) -> None:
+        super().__init__(name = name)
         self.__serial = None
         self.__input_values: list[int] = []
         self.__last_input: int = 0
@@ -26,12 +25,14 @@ class NumberInput(Component):
     def clear(self):
         self.__input_values = []
 
-    async def update(self, elapsed: float) -> None:
-        serials = self.__controller.devices_by_name("rotary")
-        if serials and self.__serial is None:
-            self.__serial = serials[0]
+    def set_device(self, device):
+        if self.__serial:
+            self.__serial.set_callback(None)
+
+        if device is not None:
+            self.__serial = device
             self.__serial.set_callback(self.__process)
-            log.info(f"Found serial device {self.__serial.name}")
+            log.info(f"Using serial device {self.__serial.name}")
 
     def __process(self, line):
         try:

@@ -47,6 +47,7 @@ class Main(krystalium.component.MainLoop):
 
         self.__serial_controller = krystalium.serialcontroller.SerialController(config = self.__config.serial)
         self.children.append(self.__serial_controller)
+        self.__serial_controller.set_callbacks(self.on_serial_device_added, self.on_serial_device_removed)
 
         self.__number_input = krystalium.number_input.NumberInput(controller = self.__serial_controller)
         self.children.append(self.__number_input)
@@ -155,6 +156,11 @@ class Main(krystalium.component.MainLoop):
     async def enlisted_mode(self, elapsed: float) -> None:
         await self.maybe_reset(elapsed)
 
+    def on_serial_device_added(self, device):
+        if device.device_name == "rotary":
+            self.__number_input.set_device(device)
+        elif device.device_name.startswith("rfid"):
+            self.__rfid.add_device(device)
 
 if __name__ == "__main__":
     logging.basicConfig(level = logging.DEBUG)

@@ -2,7 +2,6 @@ import logging
 
 from .api import BloodSample, RefinedSample, Effect
 from .component import Component
-from .serialcontroller import Serial, SerialController
 
 
 log = logging.getLogger(__name__)
@@ -25,14 +24,10 @@ def purity_to_int(purity: str) -> int:
 
 
 class Rfid(Component):
-    def __init__(self, *, controller: SerialController) -> None:
-        super().__init__(interval = 1)
-        self.__rfid_id = ""
+    def __init__(self) -> None:
+        super().__init__()
         self.__blood_sample: BloodSample | None = None
         self.__refined_sample: RefinedSample | None = None
-        self.__controller = controller
-
-        self.__serial_devices: dict[str, Serial] = {}
 
     @property
     def rfid_id(self):
@@ -46,17 +41,12 @@ class Rfid(Component):
     def refined_sample(self) -> RefinedSample | None:
         return self.__refined_sample
 
-    async def update(self, elapsed: float) -> None:
-        serials = self.__controller.devices_by_name("rfid1")
-        serials += self.__controller.devices_by_name("rfid2")
+    def add_device(self, device) -> None:
+        device.set_callback(self.__process)
+        log.info(f"Added serial device {device.name}")
 
-        for serial in serials:
-            if serial.name in self.__serial_devices:
-                continue
-
-            self.__serial_devices[serial.name] = serial
-            serial.set_callback(self.__process)
-            log.info(f"Found serial device {serial.name}")
+    def remove_device(self, device) -> None:
+        device.set_callback(None)
 
     def __process(self, line):
         if line.startswith("tag found:"):
