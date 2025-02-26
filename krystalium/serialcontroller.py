@@ -67,6 +67,7 @@ class Serial(Component):
 
                 if line.startswith("name:"):
                     self.__device_name = line.replace("name: ", "")
+                    self.__controller.device_identified(self)
                 elif self.__callback:
                     self.__callback(line)
             except SerialException:
@@ -80,6 +81,12 @@ class SerialController(Component):
         self.__devices: dict[Path, Serial] = {}
         self.__devices_to_remove: list[Serial] = []
 
+        self.__device_added_callback: Callable[[Serial], None] | None = None
+        self.__device_removed_callback: Callable[[Serial], None] | None = None
+
+    def set_callbacks(self, device_added: Callable[[Serial], None], device_removed: Callable[[Serial], None]) -> None:
+        self.__device_added_callback = device_added
+        self.__device_removed_callback = device_removed
     def devices_by_name(self, name: str) -> list[Serial]:
         return [device for device in self.__devices.values() if device.device_name == name]
 
@@ -88,10 +95,12 @@ class SerialController(Component):
             del self.__devices[device.path]
             self.children.remove(device)
             await device.stop()
+            if self.__device_removed_callback:
+                self.__device_removed_callback(device)
             log.info(f"Lost serial device {device.path}")
+        self.__devices_to_remove.clear()
 
         for pattern in self.__config.patterns:
-            # print(pattern)
             for path in Path("/dev").glob(pattern):
                 if path in self.__devices:
                     continue
@@ -108,7 +117,14 @@ class SerialController(Component):
                 self.children.append(serial)
                 self.__devices[path] = serial
 
-    async def device_lost(self, device: Serial):
+    def device_identified(self, device: Serial):
+        if device.path not in self.__devices:
+            return
+
+        if self.__device_added_callback:
+            self.__device_added_callback(device)
+
+    def device_lost(self, device: Serial):
         if device.path not in self.__devices:
             return
 
