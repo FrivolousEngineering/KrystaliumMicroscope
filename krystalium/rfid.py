@@ -9,17 +9,17 @@ log = logging.getLogger(__name__)
 
 def purity_to_int(purity: str) -> int:
     match purity.upper():
-        case "POLLUTED": return 1
-        case "TARNISHED": return 2
-        case "DIRTY": return 3
-        case "BLEMISHED": return 4
-        case "IMPURE": return 5
-        case "UNBLEMISHED": return 6
-        case "LUCID": return 7
-        case "STAINLESS": return 8
-        case "PRISTINE": return 9
-        case "IMMACULATE": return 10
-        case "PERFECT": return 11
+        case "POLLUTED": return 2
+        case "TARNISHED": return 3
+        case "DIRTY": return 4
+        case "BLEMISHED": return 5
+        case "IMPURE": return 6
+        case "UNBLEMISHED": return 7
+        case "LUCID": return 8
+        case "STAINLESS": return 9
+        case "PRISTINE": return 10
+        case "IMMACULATE": return 11
+        case "PERFECT": return 12
         case _: raise RuntimeError(f"Unknown purity {purity}")
 
 
