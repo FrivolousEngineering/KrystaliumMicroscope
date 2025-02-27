@@ -69,7 +69,7 @@ class Main(krystalium.component.MainLoop):
         elif self.__state == self.State.Enlisted:
             await self.enlisted_mode(elapsed)
 
-    async def update_input(self, *, elapsed: float, max: int) -> bool:
+    async def update_input(self, *, elapsed: float, max: int, display: bool = True) -> bool:
         if self.__input_timeout > 0:
             self.__input_timeout -= elapsed
 
@@ -85,8 +85,9 @@ class Main(krystalium.component.MainLoop):
 
         if len(self.__number_input.input) != len(self.__input_values):
             self.__input_values = self.__number_input.input.copy()
-            await self.__unreal.set_numbers(self.__input_values)
-            self.__input_timeout = 10
+            if display:
+                await self.__unreal.set_numbers(self.__input_values)
+                self.__input_timeout = 10
 
         return False
 
@@ -118,11 +119,11 @@ class Main(krystalium.component.MainLoop):
                 self.__state = self.State.InputLocked
 
     async def input_locked_mode(self, elapsed: float) -> None:
-        if await self.update_input(elapsed = elapsed, max = 0):
+        if await self.update_input(elapsed = elapsed, max = 0, display = False):
             self.__state = self.State.Input
 
     async def maybe_reset(self, elapsed: float) -> bool:
-        await self.update_input(elapsed = elapsed, max = 3)
+        await self.update_input(elapsed = elapsed, max = 3, display = False)
         if self.__input_values == [0, 0, 0]:
             self.__log.debug("Reset")
             await self.__unreal.reset()
