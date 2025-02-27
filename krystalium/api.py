@@ -22,18 +22,20 @@ class JsonApiObject:
     included: list["JsonApiObject"] = pydantic.Field(default_factory = list)
 
     @classmethod
-    def from_json(cls, json: dict[str, Any], included: dict[str, Any] | None = None) -> "JsonApiObject":
+    def from_json(cls, json: dict[str, Any], included: list[dict[str, Any]] | None = None) -> "JsonApiObject":
         data = json["data"] if "data" in json else json
 
         if included is None:
-            included = [cls.from_json(entry) for entry in json.get("included", [])]
+            included = json.get("included", [])
+
+        included_objects = [cls.from_json(entry) for entry in included]
 
         return cls(
             id = data["id"],
             type = data["type"],
             attributes = types.SimpleNamespace(**data["attributes"]),
             relationships = types.SimpleNamespace(**data.get("relationships", {})),
-            included = included,
+            included = included_objects,
         )
 
 
@@ -209,11 +211,12 @@ class Api(Component):
     async def get_enlisted_by_number(self, number: str) -> Enlisted | None:
         async with self.__session.get(f"/enlisted?filter[number]={number}&include=effects") as response:
             if not response.ok:
+                log.warning(f"Could not get enlisted with number {number}")
                 return None
 
             json = await response.json()
             if len(json["data"]) > 0:
-                jsonapi = JsonApiObject.from_json(json["data"][0])
+                jsonapi = JsonApiObject.from_json(json["data"][0], json.get("included", []))
                 return Enlisted.from_jsonapi(jsonapi)
 
             return None
