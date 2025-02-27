@@ -49,10 +49,10 @@ class Main(krystalium.component.MainLoop):
         self.children.append(self.__serial_controller)
         self.__serial_controller.set_callbacks(self.on_serial_device_added, self.on_serial_device_removed)
 
-        self.__number_input = krystalium.number_input.NumberInput(controller = self.__serial_controller)
+        self.__number_input = krystalium.number_input.NumberInput()
         self.children.append(self.__number_input)
 
-        self.__rfid = krystalium.rfid.Rfid(controller = self.__serial_controller)
+        self.__rfid = krystalium.rfid.Rfid()
         self.children.append(self.__rfid)
 
         await super().start()
