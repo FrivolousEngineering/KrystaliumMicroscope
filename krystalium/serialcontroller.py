@@ -17,6 +17,7 @@ log = logging.getLogger(__name__)
 @pydantic.dataclasses.dataclass(kw_only = True, frozen = True)
 class Config:
     baud_rate: int = 115200
+    root_path: Path = pydantic.Field(default_factory = Path)
     patterns: list[str] = pydantic.Field(default_factory = list)
 
 
@@ -107,7 +108,7 @@ class SerialController(Component):
         self.__devices_to_remove.clear()
 
         for pattern in self.__config.patterns:
-            for path in Path("/dev").glob(pattern):
+            for path in self.__config.root_path.glob(pattern):
                 if path in self.__devices:
                     continue
 
