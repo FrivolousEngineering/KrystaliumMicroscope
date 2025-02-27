@@ -118,7 +118,7 @@ class Main(krystalium.component.MainLoop):
             else:
                 await self.__unreal.message("Invalid Input!")
                 await self.__unreal.invalid()
-                self.__input_timeout = 5
+                self.__input_timeout = 3
                 self.__state = self.State.InputLocked
 
     async def input_locked_mode(self, elapsed: float) -> None:
