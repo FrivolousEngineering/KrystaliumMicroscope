@@ -182,6 +182,8 @@ class UnrealCommunication(Component):
             modifiers = et.get_modifiers(effect.action, effect.target)
             if modifiers is not None:
                 self.apply_modifiers(parameters, modifiers, effect.strength)
+            else:
+                log.warning(f"Found no modifiers for effect {effect.action}/{effect.target}")
 
         await self.__batch_call(parameters.to_batch())
 
