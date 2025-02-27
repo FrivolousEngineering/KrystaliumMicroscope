@@ -410,10 +410,16 @@ effect_table = {
 
 
 def get_modifiers(action: str, target: str) -> list[ParameterModifier] | None:
-    if action not in effect_table:
+    targets: dict[str, list] = {}
+    for table_action in effect_table:
+        if action.lower() == table_action.lower():
+            targets = effect_table[table_action]
+
+    if not targets:
         return None
 
-    if target not in effect_table[action]:
-        return None
+    for table_target in targets:
+        if target.lower() == table_target.lower():
+            return targets[table_target]
 
-    return effect_table[action][target]
+    return None
