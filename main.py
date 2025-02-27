@@ -99,6 +99,9 @@ class Main(krystalium.component.MainLoop):
 
         if self.__input_values == [0, 0, 0, 0, 0]:
             self.__state = self.State.SampleLookup
+            self.__input_timeout = -1
+            self.__input_values = []
+            self.__number_input.clear()
             await self.__unreal.clear_numbers()
             await self.__unreal.message("Awaiting Sample")
         else:
@@ -110,9 +113,9 @@ class Main(krystalium.component.MainLoop):
                 await self.__unreal.reinitialize()
                 await self.__unreal.valid()
                 self.__state = self.State.Enlisted
-            else:
                 self.__number_input.clear()
                 self.__input_values = []
+            else:
                 await self.__unreal.message("Invalid Input!")
                 await self.__unreal.invalid()
                 self.__input_timeout = 5
