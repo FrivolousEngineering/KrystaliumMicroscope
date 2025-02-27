@@ -135,8 +135,7 @@ class Enlisted:
 
 @pydantic.dataclasses.dataclass(kw_only = True, frozen = True)
 class Config:
-    host: str = "localhost"
-    port: int = 8000
+    url: str = "http://localhost:8000/"
 
 
 class Api(Component):
@@ -145,14 +144,14 @@ class Api(Component):
         self.__config = config
 
     async def start(self) -> None:
-        self.__session = aiohttp.ClientSession(f"http://{self.__config.host}:{self.__config.port}")
+        self.__session = aiohttp.ClientSession(self.__config.url)
 
     async def stop(self) -> None:
         await self.__session.close()
 
     async def get_samples(self, first_id: str, second_id: str):
         first_is_blood = False
-        async with self.__session.get(f"/blood/{first_id}") as response:
+        async with self.__session.get(f"blood/{first_id}") as response:
             if response.ok:
                 first_is_blood = True
             else:
@@ -169,7 +168,7 @@ class Api(Component):
 
     @alru_cache(maxsize = 500)
     async def get_effect(self, id: str) -> Effect | None:
-        async with self.__session.get(f"/effect/{id}") as response:
+        async with self.__session.get(f"effect/{id}") as response:
             if not response.ok:
                 log.warning(f"Could not get effect with ID {id}")
                 return None
@@ -179,7 +178,7 @@ class Api(Component):
 
     @alru_cache(maxsize = 500)
     async def get_blood_sample(self, id: str) -> BloodSample | None:
-        async with self.__session.get(f"/blood/{id}?include=") as response:
+        async with self.__session.get(f"blood/{id}?include=") as response:
             if not response.ok:
                 log.warning(f"Could not get blood sample with ID {id}")
                 return None
@@ -189,7 +188,7 @@ class Api(Component):
 
     @alru_cache(maxsize = 500)
     async def get_refined_sample(self, id: str) -> RefinedSample | None:
-        async with self.__session.get(f"/refined/{id}") as response:
+        async with self.__session.get(f"refined/{id}") as response:
             if not response.ok:
                 log.warning(f"Could not get refined sample with ID {id}")
                 return None
@@ -199,7 +198,7 @@ class Api(Component):
 
     @alru_cache(maxsize = 500)
     async def get_enlisted(self, id: str) -> Enlisted | None:
-        async with self.__session.get(f"/enlisted/{id}?include=effects") as response:
+        async with self.__session.get(f"enlisted/{id}?include=effects") as response:
             if not response.ok:
                 log.warning(f"Could not get enlisted with ID {id}")
                 return None
@@ -209,7 +208,7 @@ class Api(Component):
 
     @alru_cache(maxsize = 500)
     async def get_enlisted_by_number(self, number: str) -> Enlisted | None:
-        async with self.__session.get(f"/enlisted?filter[number]={number}&include=effects") as response:
+        async with self.__session.get(f"enlisted?filter[number]={number}&include=effects") as response:
             if not response.ok:
                 log.warning(f"Could not get enlisted with number {number}")
                 return None
