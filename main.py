@@ -1,5 +1,6 @@
 import enum
 import logging
+import asyncio
 
 import yaml
 import pydantic
@@ -110,6 +111,8 @@ class Main(krystalium.component.MainLoop):
             self.__input_timeout = -1
             self.__input_values = []
             self.__number_input.clear()
+            # Give the numbers a moment to show up before clearing
+            await asyncio.sleep(0.5)
             await self.__unreal.clear_numbers()
             await self.__unreal.message("Awaiting Sample")
         else:
