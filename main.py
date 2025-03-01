@@ -69,6 +69,14 @@ class Main(krystalium.component.MainLoop):
         elif self.__state == self.State.Enlisted:
             await self.enlisted_mode(elapsed)
 
+    async def reset(self):
+        self.__log.debug("Reset")
+        await self.__unreal.reset()
+        await self.__unreal.message("Enter Code:")
+        self.__input_values = []
+        self.__number_input.clear()
+        self.__state = self.State.Input
+
     async def update_input(self, *, elapsed: float, max: int, display: bool = True) -> bool:
         if self.__input_timeout > 0:
             self.__input_timeout -= elapsed
@@ -128,12 +136,7 @@ class Main(krystalium.component.MainLoop):
     async def maybe_reset(self, elapsed: float) -> bool:
         await self.update_input(elapsed = elapsed, max = 3, display = False)
         if self.__input_values == [0, 0, 0]:
-            self.__log.debug("Reset")
-            await self.__unreal.reset()
-            await self.__unreal.message("Enter Code:")
-            self.__input_values = []
-            self.__number_input.clear()
-            self.__state = self.State.Input
+            await self.reset()
             return True
 
         return False
@@ -156,6 +159,9 @@ class Main(krystalium.component.MainLoop):
 
     async def sample_active(self, elapsed: float) -> None:
         await self.maybe_reset(elapsed)
+
+        if not self.__rfid.blood_sample or not self.__rfid.refined_sample:
+            self.reset()
 
     async def enlisted_mode(self, elapsed: float) -> None:
         await self.maybe_reset(elapsed)
