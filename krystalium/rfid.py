@@ -30,10 +30,6 @@ class Rfid(Component):
         self.__refined_sample: RefinedSample | None = None
 
     @property
-    def rfid_id(self):
-        return self.__rfid_id
-
-    @property
     def blood_sample(self) -> BloodSample | None:
         return self.__blood_sample
 
@@ -50,42 +46,45 @@ class Rfid(Component):
 
     def __process(self, line):
         if line.startswith("tag found:"):
-            self.__handle_tag(line.replace("tag found: ", ""))
+            self.__handle_tag(line.replace("tag found:", "").strip())
         elif line.startswith("tag lost:"):
-            log.debug(f"Lost tag {self.__rfid_id}")
-            if self.__blood_sample and self.__blood_sample.rfid_id == self.__rfid_id:
-                self.__blood_sample = None
-            if self.__refined_sample and self.__refined_sample.rfid_id == self.__rfid_id:
-                self.__refined_sample = None
-            self.__rfid_id = ""
+            self.__handle_tag_lost(line.replace("tag lost:", "").strip())
         elif line.startswith("traits: "):
-            self.__handle_tag(line.replace("traits: ", ""))
+            self.__handle_tag(line.replace("traits:", "").strip())
 
     def __handle_tag(self, line: str):
         parts = line.split(" ")
         if len(parts) <= 2:
             return
 
-        self.__rfid_id = parts[0]
-
         match parts[1]:
             case "raw":
                 log.warning("Raw samples are not supported")
             case "refined":
-                self.__handle_refined_sample(parts[2:])
+                self.__handle_refined_sample(parts[0], parts[2:])
             case "blood":
-                self.__handle_blood_sample(parts[2:])
+                self.__handle_blood_sample(parts[0], parts[2:])
             case _:
                 log.warning(f"Unrecognised sample {parts[1]} detected")
 
-    def __handle_refined_sample(self, parts: list[str]) -> None:
+    def __handle_tag_lost(self, line: str):
+        if not line:
+            return
+
+        log.debug(f"Lost tag {line}")
+        if self.__blood_sample and self.__blood_sample.rfid_id == line:
+            self.__blood_sample = None
+        if self.__refined_sample and self.__refined_sample.rfid_id == line:
+            self.__refined_sample = None
+
+    def __handle_refined_sample(self, rfid_id: str, parts: list[str]) -> None:
         if len(parts) < 6:
             log.debug("Insufficient parts for refined sample")
             return
 
         self.__refined_sample = RefinedSample(
             id = -1,
-            rfid_id = self.__rfid_id,
+            rfid_id = rfid_id,
             strength = purity_to_int(parts[5]),
             primary_action = parts[0],
             primary_target = parts[1],
@@ -95,15 +94,14 @@ class Rfid(Component):
 
         log.debug(f"Found tag with refined sample: {self.__refined_sample}")
 
-    def __handle_blood_sample(self, parts: list[str]) -> None:
+    def __handle_blood_sample(self, rfid_id: str, parts: list[str]) -> None:
         if len(parts) < 6:
             log.debug("Insufficient parts for blood sample")
             return
 
         self.__blood_sample = BloodSample(
             id = -1,
-            rfid_id = self.__rfid_id,
-            # strength = int(parts[2]),
+            rfid_id = rfid_id,
             strength = purity_to_int(parts[5]),
             effect = Effect(
                 id = -1,
