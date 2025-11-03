@@ -12,6 +12,8 @@ import krystalium
 class Config:
     update_rate: int = 60
 
+    sample_only: bool = False
+
     api: krystalium.api.Config = pydantic.Field(default_factory = krystalium.api.Config)
     unreal: krystalium.unreal.Config = pydantic.Field(default_factory = krystalium.unreal.Config)
     serial: krystalium.serialcontroller.Config = pydantic.Field(default_factory = krystalium.serialcontroller.Config)
@@ -37,7 +39,10 @@ class Main(krystalium.component.MainLoop):
 
         self.__log = logging.getLogger()
         self.__input_values = []
-        self.__state = self.State.Input
+        if self.__config.sample_only:
+            self.__state = self.State.SampleLookup
+        else:
+            self.__state = self.State.Input
         self.__input_timeout = 0
 
     async def start(self):
@@ -58,6 +63,9 @@ class Main(krystalium.component.MainLoop):
 
         await super().start()
 
+        if self.__config.sample_only:
+            await self.set_sample_lookup_mode()
+
     async def update(self, elapsed: float) -> None:
         if self.__state == self.State.Input:
             await self.input_mode(elapsed)
@@ -73,10 +81,14 @@ class Main(krystalium.component.MainLoop):
     async def reset(self):
         self.__log.debug("Reset")
         await self.__unreal.reset()
-        await self.__unreal.message("Enter Code:")
-        self.__input_values = []
-        self.__number_input.clear()
-        self.__state = self.State.Input
+
+        if self.__config.sample_only:
+            await self.set_sample_lookup_mode()
+        else:
+            await self.__unreal.message("Enter Code:")
+            self.__input_values = []
+            self.__number_input.clear()
+            self.__state = self.State.Input
 
     async def update_input(self, *, elapsed: float, max: int, display: bool = True) -> bool:
         if self.__input_timeout > 0:
@@ -107,14 +119,7 @@ class Main(krystalium.component.MainLoop):
             return
 
         if self.__input_values == [0, 0, 0, 0, 0]:
-            self.__state = self.State.SampleLookup
-            self.__input_timeout = -1
-            self.__input_values = []
-            self.__number_input.clear()
-            # Give the numbers a moment to show up before clearing
-            await asyncio.sleep(0.5)
-            await self.__unreal.clear_numbers()
-            await self.__unreal.message("Awaiting Sample")
+            await self.set_sample_lookup_mode(0.5)
         else:
             number = ''.join(map(str, self.__input_values))
             self.__log.debug(f"Looking up enlisted {number}")
@@ -144,6 +149,19 @@ class Main(krystalium.component.MainLoop):
 
         return False
 
+    async def set_sample_lookup_mode(self, delay: float = 0) -> None:
+        self.__state = self.State.SampleLookup
+        self.__input_timeout = -1
+        self.__input_values = []
+        self.__number_input.clear()
+
+        if delay > 0:
+            # Give the numbers a moment to show up before clearing
+            await asyncio.sleep(delay)
+
+        await self.__unreal.clear_numbers()
+        await self.__unreal.message("Awaiting Sample")
+
     async def sample_lookup(self, elapsed: float) -> None:
         if await self.maybe_reset(elapsed):
             return
@@ -164,7 +182,7 @@ class Main(krystalium.component.MainLoop):
         await self.maybe_reset(elapsed)
 
         if not self.__rfid.blood_sample or not self.__rfid.refined_sample:
-            self.reset()
+            await self.reset()
 
     async def enlisted_mode(self, elapsed: float) -> None:
         await self.maybe_reset(elapsed)
