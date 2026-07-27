@@ -172,6 +172,8 @@ class Main(krystalium.component.MainLoop):
         if blood is None or refined is None:
             return
 
+        await self.__unreal.message("Please Wait")
+
         await self.__unreal.update_from_samples(blood, refined)
         await self.__unreal.reinitialize()
         await self.__unreal.valid()
